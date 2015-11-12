@@ -606,6 +606,77 @@ function printOut_thapthim($weekday = -1, $cli = true) {
 	}
 }
 
+function scraping_redFellas() {
+    // create HTML DOM
+    $html = file_get_html('http://emporia.redfellas.com/meny');
+
+    // get Mon-Fri + soup + sallad
+    $countDays = 0;
+	
+    foreach($html-> find ('div [class="rounded-course"]')as $daily){
+
+        // if the days have reached 6, it means we made it to the soup and sallad
+     if ($countDays < 5) {
+			
+			// get title
+			$item['title'] = trim ($daily -> find ('h3',0)-> plaintext);
+			
+			$item['priceRed'] = trim ($daily-> find('h3',1)-> plaintext);
+
+			$item['descRed'] = trim ( $daily -> find ('p[class="text"]',0)-> plaintext);
+			
+			$ret[] = $item;
+			
+		    }
+			}	
+    
+    // clean up memory
+    $html->clear();
+    unset($html);
+
+    return $ret;
+}
+
+function printOut_redFellas($weekday = -1, $cli = true) {
+	$ret = scraping_redFellas();
+	
+	// show results on cli
+	$countDays = 0;
+	if ($cli) {
+		echo "RedFellas\n";
+		echo "*********\n";
+		foreach($ret as $v) {
+			if($countDays < 5 && $weekday == -1 || $weekday == $countDays) {
+				echo $v['title']."\n----------------------\n";
+				echo $v ['priceRed']."\n----------------------\n";
+				echo $v ['descRed']."\n----------------------\n";
+				
+				echo "\n----------------------\n";
+			}
+			if($countDays == 5) {
+				echo "\n----------------------\n";
+			}
+			$countDays++;
+		}
+	} else {
+		echo "<div class='restaurantContainer'>";
+		echo "<div class='restaurantName'>RedFellas</div>";
+		foreach($ret as $v) {
+			if($countDays < 5 && $weekday == -1 || $weekday == $countDays) {
+				echo "<div class='title'>".$v['title']."</div>";
+				echo "<div class='priceRed'>".$v['priceRed']."</div>";
+				echo "<div class='descRed'>".$v['descRed']."</div>";
+				echo "</div>";
+			}
+			if($countDays == 5) {
+			
+			}
+			$countDays++;
+		}
+		echo "</div>";
+	}
+}
+
 function printOut_noWork($cli = true) {
 	
 	if ($cli) {
@@ -649,6 +720,8 @@ if ($dayOfWeek > 4 || $dayOfWeek < 0) {
 	printOut_miamarias($dayOfWeek, false);
 	echo "</div><div class='column'>";
 	printOut_meck($dayOfWeek, false);
+	echo "</div><div class='column'>";
+	printOut_redFellas($dayOfWeek, false);
 	echo "</div><div class='column'>";
 	printOut_niagara($dayOfWeek, false);
 	echo "</div><div class='column'>";
